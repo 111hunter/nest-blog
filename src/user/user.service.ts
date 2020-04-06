@@ -9,43 +9,36 @@ export class UserService {
         @InjectRepository(UserEntity) private userRepo: Repository<UserEntity>,
     ) { }
 
-    async findByUsername(
-        username: string,
-        user?: UserEntity,
-    ): Promise<UserEntity> {
-        return (
-            await this.userRepo.findOne({
-                where: { username },
-                relations: ['followers'],
-            })
-        ).toProfile(user);
-    }
-
-    async followUser(currentUser: UserEntity, username: string) {
-        const user = await this.userRepo.findOne({
+    async findByUsername(username: string) {
+        return await this.userRepo.findOne({
             where: { username },
             relations: ['followers'],
         });
+    }
+
+    async followUser(currentUser: UserEntity, username: string) {
+        const user = await this.findByUsername(username);
         let { followed } = user.toProfile(currentUser);
         if (!followed) {
             user.followers.push(currentUser);
             await user.save();
+            followed = true;
         }
-        return { ...user.toJSON(), "followed": true };
+        delete user.followers;
+        return { user, followed };
     }
 
     async unfollowUser(currentUser: UserEntity, username: string) {
-        const user = await this.userRepo.findOne({
-            where: { username },
-            relations: ['followers'],
-        });
+        const user = await this.findByUsername(username);
         let { followed } = user.toProfile(currentUser);
         if (followed) {
             user.followers = user.followers.filter(
-                follower => follower.username !== currentUser.username
+                follower => follower.id !== currentUser.id
             )
             await user.save();
+            followed = false;
         }
-        return { ...user.toJSON(), "followed": false };
+        delete user.followers;
+        return { user, followed };
     }
 }

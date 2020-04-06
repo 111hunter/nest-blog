@@ -20,12 +20,8 @@ export class ProfileController {
     @Get('/:username')
     async findProfile(
         @Param('username') username: string,
-        @User() user: UserEntity,
     ) {
-        const profile = await this.userService.findByUsername(username, user);
-        if (!profile) {
-            throw new NotFoundException();
-        }
+        const profile = await this.userService.findByUsername(username);
         return { profile };
     }
 
