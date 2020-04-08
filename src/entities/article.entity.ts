@@ -4,14 +4,15 @@ import {
     BeforeInsert,
     ManyToOne,
     ManyToMany,
-    JoinColumn,
     RelationCount,
     JoinTable,
+    OneToMany,
 } from 'typeorm';
 import { classToPlain } from 'class-transformer';
 import * as slugify from 'slug';
 import { AbstractEntity } from './abstract-entity';
 import { UserEntity } from './user.entity';
+import { CommentEntity } from './comment.entity';
 
 @Entity('articles')
 export class ArticleEntity extends AbstractEntity {
@@ -38,6 +39,12 @@ export class ArticleEntity extends AbstractEntity {
     @RelationCount((article: ArticleEntity) => article.favoritedBy)
     favoritesCount: number;
 
+    @OneToMany(
+        type => CommentEntity,
+        comment => comment.article,
+    )
+    comments: CommentEntity[];
+
     @ManyToOne(
         type => UserEntity,
         user => user.articles,
@@ -61,11 +68,24 @@ export class ArticleEntity extends AbstractEntity {
     }
 
     toArticle(user?: UserEntity) {
+        const article: any = this.toJSON();
         let favorited = false;
         if (user) {
-            favorited = this.favoritedBy.map(user => user.id).includes(user.id);
+            favorited = article.favoritedBy.map(user => user.id).includes(user.id);
         }
-        const article: any = this.toJSON();
+        delete article.favoritedBy;
         return { ...article, favorited };
     }
+
+    toFavorite(user: UserEntity) {
+        const article: any = this.toJSON();
+        let ids = article.favoritedBy.map(fav => fav.id === user.id);
+        let articleId;
+        for (var value of ids) {
+          if (value) {
+            articleId = article.id;
+          }
+        }
+        return articleId;
+      }
 }

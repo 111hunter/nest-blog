@@ -11,6 +11,7 @@ import { Exclude, classToPlain } from 'class-transformer';
 import { IsEmail } from 'class-validator';
 import { AbstractEntity } from './abstract-entity';
 import { ArticleEntity } from './article.entity';
+import { CommentEntity } from './comment.entity';
 
 @Entity('users')
 export class UserEntity extends AbstractEntity {
@@ -56,6 +57,12 @@ export class UserEntity extends AbstractEntity {
     )
     favorites: ArticleEntity[];
 
+    @OneToMany(
+        type => CommentEntity,
+        comment => comment.author,
+    )
+    comments: CommentEntity[];
+
     @BeforeInsert()
     async hashPassword() {
         this.password = await bcrypt.hash(this.password, 10);
@@ -70,11 +77,11 @@ export class UserEntity extends AbstractEntity {
     }
 
     toProfile(user?: UserEntity) {
+        const profile: any = this.toJSON();
         let followed = false;
         if (user) {
-            followed = this.followers.map(user => user.id).includes(user.id);
+            followed = profile.followers.map(user => user.id).includes(user.id);
         }
-        const profile: any = this.toJSON();
         return { ...profile, followed };
     }
 }

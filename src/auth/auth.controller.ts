@@ -5,27 +5,27 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/user/user.decorator';
 import { UserEntity } from 'src/entities/user.entity';
 
-@Controller('users')
+@Controller()
 export class AuthController {
     constructor(private authService: AuthService) { }
 
-    @Post()
+    @Post('users')
     register(@Body(ValidationPipe) credentials: { user: RegisterDTO }) {
         return this.authService.register(credentials.user);
     }
 
-    @Post('/login')
+    @Post('users/login')
     login(@Body(ValidationPipe) credentials: { user: LoginDTO }) {
         return this.authService.login(credentials.user);
     }
 
-    @Get()
+    @Get('user')
     @UseGuards(AuthGuard())
     findCurrentUser(@User() { username }: UserEntity) {
         return this.authService.findCurrentUser(username);
     }
 
-    @Put()
+    @Put('user')
     @UseGuards(AuthGuard())
     update(
         @User() { username }: UserEntity,
